@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Seçkin Çanta
 
-## Getting Started
+Premium deri çanta ve cüzdan e-ticaret platformu.
 
-First, run the development server:
+## Mimari
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+| Katman | Teknoloji | Sorumluluk |
+|--------|-----------|------------|
+| Storefront + App Admin | Next.js App Router | UI, API routes, checkout |
+| Headless CMS | Payload CMS 3 (`/admin`) | Ürün, kategori, görsel, homepage, SEO |
+| Ops DB / Auth | Supabase Postgres + Auth | Kullanıcı, sepet, sipariş, stok, ödeme, iade, kupon, yorum |
+| Ödeme | iyzico (PaymentService) | Kart ödemesi — kart saklanmaz |
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Source of truth:** Katalog/içerik → Payload. Stok/sipariş/kullanıcı → Supabase. Senkron yalnızca SKU inventory satırları.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Kurulum
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. `cp .env.example .env`
+2. Supabase projesi oluştur, `supabase/migrations/001_initial_schema.sql` çalıştır
+3. Payload için `DATABASE_URL` (Supabase connection string veya ayrı Postgres)
+4. `npm install`
+5. `npm run dev`
+6. CMS: http://localhost:3000/admin
+7. Mağaza: http://localhost:3000
+8. Operasyon paneli: http://localhost:3000/app-admin
 
-## Learn More
+## Scriptler
 
-To learn more about Next.js, take a look at the following resources:
+- `npm run dev` — geliştirme
+- `npm run build` — production build
+- `npm run payload` — Payload CLI
+- `npm run generate:types` — Payload types
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Güvenlik notları
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `SUPABASE_SERVICE_ROLE_KEY`, `PAYMENT_SECRET_KEY`, `PAYLOAD_SECRET` asla client bundle’a konmaz
+- Fiyat/stok/kupon doğrulaması server-side
+- Ödeme yalnızca provider webhook/callback doğrulaması sonrası finalize edilir (idempotent)
+- App admin yetkisi `profiles.role = admin` veya `ADMIN_EMAILS` ile server-side kontrol edilir
 
-## Deploy on Vercel
+## Marka
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Seçkin Çanta** — zamansız deri.
