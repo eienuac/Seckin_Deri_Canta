@@ -25,6 +25,8 @@ export interface Category {
     description?: string | null
     ogImage?: number | Media | null
   }
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface Collection {

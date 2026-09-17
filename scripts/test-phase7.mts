@@ -27,7 +27,7 @@ async function main() {
   console.log('reviews', { count: reviews.count ?? 0, avg: reviews.averageRating ?? 0 })
 
   // Coupon validation via cart coupon needs a real cart — test service directly
-  const { validateCoupon } = await import('../src/services/coupons/index.ts')
+  const { validateCoupon } = await import('../src/services/coupons/index')
   const coupon = await validateCoupon({ code: 'HOSGELDIN10', subtotal: 2000 })
   console.log('coupon', coupon)
 

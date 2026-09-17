@@ -1,7 +1,12 @@
 import type { MetadataRoute } from 'next'
 import { getPayloadClient } from '@/lib/payload'
 import { absoluteUrl } from '@/lib/utils'
-import type { Category, Product } from '@/payload-types'
+
+/** Minimal shape for sitemap entries — avoids Payload select/partial vs full Category mismatch */
+type SitemapDoc = {
+  slug?: string | null
+  updatedAt?: string | null
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -26,35 +31,43 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         depth: 0,
         select: { slug: true, updatedAt: true },
       }),
-      payload.find({
-        collection: 'pages',
-        where: { _status: { equals: 'published' } },
-        limit: 100,
-        depth: 0,
-        select: { slug: true, updatedAt: true },
-      }).catch(() => ({ docs: [] as Array<{ slug: string; updatedAt: string }> })),
+      payload
+        .find({
+          collection: 'pages',
+          where: { _status: { equals: 'published' } },
+          limit: 100,
+          depth: 0,
+          select: { slug: true, updatedAt: true },
+        })
+        .catch(() => ({ docs: [] as SitemapDoc[] })),
     ])
 
-    const productRoutes = (products.docs as Product[]).map((p) => ({
-      url: absoluteUrl(`/products/${p.slug}`),
-      lastModified: new Date(p.updatedAt),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
+    const productRoutes = (products.docs as SitemapDoc[])
+      .filter((p) => p.slug)
+      .map((p) => ({
+        url: absoluteUrl(`/products/${p.slug}`),
+        lastModified: p.updatedAt ? new Date(p.updatedAt) : undefined,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }))
 
-    const categoryRoutes = (categories.docs as Category[]).map((c) => ({
-      url: absoluteUrl(`/products?category=${c.slug}`),
-      lastModified: new Date(c.updatedAt),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }))
+    const categoryRoutes = (categories.docs as SitemapDoc[])
+      .filter((c) => c.slug)
+      .map((c) => ({
+        url: absoluteUrl(`/products?category=${c.slug}`),
+        lastModified: c.updatedAt ? new Date(c.updatedAt) : undefined,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
 
-    const pageRoutes = (pages.docs as Array<{ slug: string; updatedAt: string }>).map((p) => ({
-      url: absoluteUrl(`/pages/${p.slug}`),
-      lastModified: new Date(p.updatedAt),
-      changeFrequency: 'monthly' as const,
-      priority: 0.5,
-    }))
+    const pageRoutes = (pages.docs as SitemapDoc[])
+      .filter((p) => p.slug)
+      .map((p) => ({
+        url: absoluteUrl(`/pages/${p.slug}`),
+        lastModified: p.updatedAt ? new Date(p.updatedAt) : undefined,
+        changeFrequency: 'monthly' as const,
+        priority: 0.5,
+      }))
 
     return [...staticRoutes, ...productRoutes, ...categoryRoutes, ...pageRoutes]
   } catch {
